@@ -1,0 +1,27 @@
+// configMap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: secloudit-configmap
+  namespace: secloudit-namespace
+data:  
+  SECLOUDIT: "Platform as a service!" 
+  
+// pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secloudit-pod
+  namespace: secloudit-namespace
+spec:
+  containers:
+  - image: busybox
+    name: secloudit-container
+    env:
+    - name: SECLOUDIT_ENV
+      valueFrom:
+        configMapKeyRef:
+          name: secloudit-configmap
+          key: SECLOUDIT
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do echo $(SECLOUDIT_ENV); sleep 10;done"]

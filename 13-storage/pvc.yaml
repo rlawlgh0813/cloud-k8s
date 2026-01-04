@@ -1,0 +1,189 @@
+// 각 워커노드에 디렉토리 생성
+// kjh-cluster2
+sudo mkdir -p /data/volumes/pv1
+sudo chmod 777 /data/volumes/pv1
+
+// kjh-cluster3
+sudo mkdir -p /data/volumes/pv2
+sudo chmod 777 /data/volumes/pv2
+
+// kjh-cluster4
+sudo mkdir -p /data/volumes/pv3
+sudo chmod 777 /data/volumes/pv3
+
+// pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: secloudit-pv1
+spec:
+  storageClassName: secloudit-storageclass
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 1G
+  accessModes:
+    - ReadWriteOnce
+  local:
+    path: /data/volumes/pv1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - kjh-cluster2
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: secloudit-pv2
+spec:
+  storageClassName: secloudit-storageclass
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 2G
+  accessModes:
+    - ReadWriteOnce
+  local:
+    path: /data/volumes/pv2
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - kjh-cluster3
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: secloudit-pv3
+spec:
+  storageClassName: secloudit-storageclass
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 3G
+  accessModes:
+    - ReadWriteOnce
+  local:
+    path: /data/volumes/pv3
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - kjh-cluster4
+                    
+// pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: secloudit-pvc1
+spec:
+  storageClassName: secloudit-storageclass
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1G
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: secloudit-pvc2
+spec:
+  storageClassName: secloudit-storageclass
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2G
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: secloudit-pvc3
+spec:
+  storageClassName: secloudit-storageclass
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3G
+          
+// storageclass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: secloudit-storageclass
+  annotations:
+    storageclass.kubernetes.io/is-default-class: 'true'
+provisioner: kubernetes.io/no-provisioner
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+
+// pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secloudit-pod1
+  labels:
+    name: app
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command: ['sh', '-c', 'echo "Platform as a service!" > /mnt/secloudit-1.log && sleep 3600']
+    volumeMounts:
+      - name: secloudit-local-volume
+        mountPath: /mnt
+  volumes:
+    - name: secloudit-local-volume
+      persistentVolumeClaim:
+        claimName: secloudit-pvc1
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secloudit-pod2
+  labels:
+    name: app
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command: ["/bin/sh", "-c"]
+    args:
+      - while true; do
+          date >> /mnt/secloudit-2.log;
+          sleep 5;
+        done
+    volumeMounts:
+      - name: secloudit-local-volume
+        mountPath: /mnt
+  volumes:
+    - name: secloudit-local-volume
+      persistentVolumeClaim:
+        claimName: secloudit-pvc2
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secloudit-pod3
+  labels:
+    name: app
+spec:
+  containers:
+  - name: app
+    image: nginx
+    volumeMounts:
+      - name: secloudit-local-volume
+        mountPath: /var/log/nginx
+  volumes:
+    - name: secloudit-local-volume
+      persistentVolumeClaim:
+        claimName: secloudit-pvc3                

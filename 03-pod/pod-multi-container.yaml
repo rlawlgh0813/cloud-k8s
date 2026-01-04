@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secloudit-pod
+  namespace: secloudit-namespace
+spec:
+  containers:
+  - image: nginx
+    name: secloudit-container1
+  - image: redis
+    name: secloudit-container2
+  - image: memcached
+    name: secloudit-container3
+  - image: consul:1.15
+    name: secloudit-container4

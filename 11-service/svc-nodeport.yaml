@@ -1,0 +1,2 @@
+// cli
+kubectl expose deployment secloudit-deployment --type=NodePort --port 80 --target-port=80 --name=secloudit-service --namespace secloudit-namespace

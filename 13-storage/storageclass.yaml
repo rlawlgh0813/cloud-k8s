@@ -1,0 +1,68 @@
+// values.yaml
+nfs:
+  server: 192.168.3.21                     # NFS Server IP 입력
+  path: /home/share/nfs                       # NFS Export Path (Provisioner가 사용할 디렉터리)
+
+storageClass:
+  provisionerName: secloudit-nfs-provisioner  # StorageClass에 사용할 Provisioner 이름 설정
+  defaultClass: true                          # 기본 StorageClass로 지정할지 여부
+  name: secloudit-storageclass                # 생성할 StorageClass 이름 설정
+  reclaimPolicy: Retain                       # PV Reclaim 정책 (Retain: PV 유지, Delete: 자동 삭제)
+  allowVolumeExpansion: false                 # PVC 확장 기능 여부
+  archiveOnDelete: false                      # PVC 삭제 시 NFS 디렉터리 아카이브 여부
+  
+// helm 설치
+# 1. Helm Repo 추가
+helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
+helm repo update nfs-subdir-external-provisioner
+
+# 2. Provisioner 설치
+helm install secloudit-nfs-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner -f values.yaml --version 4.0.18
+
+# 3. 설치 확인
+helm list -n default
+kubectl get all -l app=nfs-subdir-external-provisioner
+kubectl get storageclass
+
+// pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: secloudit-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: secloudit-storageclass
+  resources:
+    requests:
+      storage: 1Gi  
+      
+// pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secloudit-pod
+  labels:
+    name: app
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command: ['sh', '-c', 'echo "Platform as a service!" > /mnt/secloudit.log && sleep 3600']
+    volumeMounts:
+      - name: secloudit-local-volume
+        mountPath: /mnt
+  volumes:
+    - name: secloudit-local-volume
+      persistentVolumeClaim:
+        claimName: secloudit-pvc      
+        
+// PVC Pending -> Bound 확인
+kubectl get pvc secloudit-pvc
+
+// PV 랜덤 생성 확인
+kubectl get pv
+
+// NFS 서버 확인
+kubectl exec -it secloudit-pod -- cat /mnt/secloudit.log
+        

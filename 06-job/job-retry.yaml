@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: secloudit-job
+  namespace: secloudit-namespace
+spec:
+  template:
+    spec:
+      containers:
+      - name: secloudit-container
+        image: busybox
+        args: ["date"]
+      restartPolicy: OnFailure
+  backoffLimit: 2

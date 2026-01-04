@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: secloudit-job
+  namespace: secloudit-namespace
+spec:
+  completions: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: secloudit-container
+        image: busybox
+        command: ["sleep", "30"]
+
+---
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: secloudit-job
+  namespace: secloudit-namespace
+spec:
+  completions: 3
+  parallelism: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: secloudit-container
+        image: quay.io/prometheus/busybox
+        command: ["sleep", "20"]

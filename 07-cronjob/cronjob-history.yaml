@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: secloudit-cronjob
+  namespace: secloudit-namespace
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: secloudi-container
+            image: kubetm/init
+            command: ["sh", "-c", "echo 'start';sleep 20; echo 'end'"]
+          terminationGracePeriodSeconds: 0
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 1

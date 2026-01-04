@@ -1,0 +1,65 @@
+// storageClass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: secloudit-storageclass
+  annotations:
+    storageclass.kubernetes.io/is-default-class: 'true'
+provisioner: kubernetes.io/no-provisioner
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+
+// pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: secloudit-pv
+spec:
+  storageClassName: secloudit-storageclass
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    path: "/home/share/nfs"
+    server: 192.168.7.18
+    
+// pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: secloudit-pvc
+spec:
+  storageClassName: secloudit-storageclass
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+      
+// pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secloudit-pod
+  labels:
+    name: app
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command: ['sh', '-c', 'echo "Platform as a service!" > /mnt/secloudit-nfs.log && sleep 3600']
+    volumeMounts:
+      - name: secloudit-local-volume
+        mountPath: /mnt
+  volumes:
+    - name: secloudit-local-volume
+      persistentVolumeClaim:
+        claimName: secloudit-pvc       
+        
+// pod 에서 확인
+kubectl exec -it secloudit-pod -- cat /mnt/secloudit-nfs.log
+
+// nfs 서버에서 확인
+cat /home/share/nfs/secloudit-nfs.log

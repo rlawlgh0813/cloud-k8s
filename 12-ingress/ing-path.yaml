@@ -1,0 +1,162 @@
+// deploy 생성
+kubectl create deploy ing-deploy --image=nginx --port=80 --replicas=2
+
+// service 생성
+kubectl expose deploy ing-deploy --name=ing-svc --port=80 --target-port=80 --type=ClusterIP
+
+// deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  labels:
+    app: "grafana"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "grafana"
+  template:
+    metadata:
+      labels:
+        app: "grafana"
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - name: http
+          containerPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      name: hello
+      labels:
+        app: hello
+    spec:
+      containers:
+      - name: nginx
+        image: nginxdemos/hello:plain-text
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd
+  labels:
+    app: "httpd"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "httpd"
+  template:
+    metadata:
+      labels:
+        app: "httpd"
+    spec:
+      containers:
+      - name: httpd
+        image: httpd:latest
+        ports:
+        - name: http
+          containerPort: 80
+          
+// service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  labels:
+    app: "grafana"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 3000
+  selector:
+    app: "grafana"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello
+  labels:
+    app: hello
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8080
+    targetPort: 80
+  selector:
+    app: hello
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd
+  labels:
+    app: "httpd"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+  selector:
+    app: "httpd"
+    
+// ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: path
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /hello
+        pathType: Prefix
+        backend:
+          service:
+            name: hello
+            port:
+              name: http
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              name: http
+  - http:
+      paths:
+      - path: /httpd
+        pathType: Prefix
+        backend:
+          service:
+            name: httpd
+            port:
+              name: http

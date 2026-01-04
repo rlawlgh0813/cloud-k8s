@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secloudit-pod
+  namespace: secloudit-namespace
+spec:
+  containers:
+  - image: busybox
+    name: secloudit-container
+    env:
+    - name: SECLOUDIT
+      value: "Platform as a service!"
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do echo $(SECLOUDIT); sleep 10;done"]

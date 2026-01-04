@@ -1,0 +1,76 @@
+// ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: host
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: hello.133.186.215.162.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: hello
+            port:
+              name: http
+  - host: grafana.133.186.215.162.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              name: http
+  - host: httpd.133.186.215.162.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: httpd
+            port:
+              name: http
+
+// ingress.yaml              
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: path
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: secloudit-ing.133.186.223.222.nip.io
+    http:
+      paths:
+      - path: /hello
+        pathType: Prefix
+        backend:
+          service:
+            name: hello
+            port:
+              name: http
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              name: http
+      - path: /httpd
+        pathType: Prefix
+        backend:
+          service:
+            name: httpd
+            port:
+              name: http
+              

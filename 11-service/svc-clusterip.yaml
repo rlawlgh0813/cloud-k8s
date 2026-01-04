@@ -1,0 +1,43 @@
+// deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secloudit-deployment
+  namespace: default
+  labels:
+    app: hello
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+      - name: nginx
+        image: nginxdemos/hello:plain-text
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+
+// service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: secloudit-service
+  namespace: default
+  labels:
+    app: hello
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8080
+    targetPort: 80
+  selector:
+    app: hello

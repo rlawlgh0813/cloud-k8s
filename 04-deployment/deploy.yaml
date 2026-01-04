@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secloudit-deployment
+  namespace: default  
+spec:
+  selector:
+    matchLabels:
+      apps: apps
+  replicas: 1  
+  template:
+    metadata:
+      labels:
+        apps: apps
+    spec:
+      containers:
+      - name: container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+          protocol: TCP

@@ -1,0 +1,33 @@
+// volume.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secloudit-pod
+  namespace: default
+spec:
+  volumes:
+    - name: secloudit-log-volume
+      emptyDir: {}
+  containers:
+    - name: secloudit-log-writer
+      image: busybox
+      command: ["/bin/sh", "-c"]
+      args:
+        - while true; do
+            echo "$(date)" >> /var/log/secloudit.log;
+            sleep 5;
+          done
+      volumeMounts:
+        - name: secloudit-log-volume
+          mountPath: /var/log
+    - name: secloudit-log-reader
+      image: busybox
+      command: ["/bin/sh", "-c"]
+      args:
+        - tail -f /var/log/secloudit.log
+      volumeMounts:
+        - name: secloudit-log-volume
+          mountPath: /var/log
+          
+// pod 내부에서 log 확인
+kubectl exec -it secloudit-pod -- /bin/sh

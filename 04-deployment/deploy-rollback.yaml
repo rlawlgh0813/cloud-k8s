@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-toleration
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      apps: apps
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        apps: apps
+    spec:
+      containers:
+      - name: container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+          protocol: TCP
+      tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Equal"
+        effect: "NoSchedule"

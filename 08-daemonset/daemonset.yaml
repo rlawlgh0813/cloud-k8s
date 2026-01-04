@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: secloudit-daemonset
+  namespace: kube-system  #로그 수집기는 관리용 파드나 설정에 해당 되므로 kube-system 네임스페이스로 지정
+  labels:
+    k8s-app: fluentd-logging
+spec:
+  selector:
+    matchLabels:
+      name: fluentd-elasticsearch
+  template:
+    metadata:
+      labels:
+        name: fluentd-elasticsearch
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: secloudit-container
+        image: quay.io/fluentd_elasticsearch/fluentd:v2.5.2
+        volumeMounts:
+        - name: secloudit-log
+          mountPath: /var/log
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: secloudit-log
+        hostPath:
+          path: /var/log
